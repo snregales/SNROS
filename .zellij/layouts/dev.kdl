@@ -1,0 +1,37 @@
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+        children
+    }
+
+    tab name="editor" focus=true {
+        pane command="nvim" {
+            args "."
+        }
+        floating_panes {
+            pane name="claude" command="claude" {
+                height "60%"
+                width "60%"
+            }
+        }
+    }
+
+    tab name="shell" {
+        pane split_direction="vertical" {
+            pane name="nix" size="60%"
+            pane name="git" size="40%" command="lazygit"
+        }
+    }
+
+    tab name="vm" {
+        pane split_direction="horizontal" {
+            pane name="build" size="70%" command="just" {
+                args "build-vm"
+                start_suspended true
+            }
+            pane name="logs" size="30%"
+        }
+    }
+}
