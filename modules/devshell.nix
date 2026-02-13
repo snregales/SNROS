@@ -1,7 +1,7 @@
-{ ... }:
+{ inputs, ... }:
 {
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, config, system, ... }:
     {
       devShells.default = pkgs.mkShell {
         packages = [
@@ -14,6 +14,7 @@
           pkgs.zellij
           pkgs.sops
           pkgs.age
+          inputs.nixgl.packages.${system}.nixGLIntel
           config.packages.neovim
         ];
       };

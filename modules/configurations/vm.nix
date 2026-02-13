@@ -5,6 +5,7 @@ in {
     module = {config, ...}: {
       imports = with flake.modules.nixos; [
         base
+        niri
         sops
       ];
 
@@ -12,9 +13,14 @@ in {
 
       virtualisation.vmVariant = {
         virtualisation = {
-          memorySize = 2048;
+          memorySize = 4096;
           cores = 2;
           diskSize = 4096;
+
+          qemu.options = [
+            "-device virtio-vga-gl"
+            "-display gtk,gl=on"
+          ];
 
           sharedDirectories.sops-key = {
             source = ''"''${SOPS_AGE_KEY_DIR:-$PWD/secrets/vm-key}"'';
