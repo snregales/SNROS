@@ -12,6 +12,8 @@
           pkgs.fzf
           pkgs.yazi
           pkgs.zellij
+          pkgs.sops
+          pkgs.age
           config.packages.neovim
         ];
       };
