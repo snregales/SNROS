@@ -2,9 +2,15 @@
   inherit (config) flake;
 in {
   configurations.nixos.dell-xps-9640 = {
-    module = {config, ...}: {
+    module = {
+      config,
+      lib,
+      ...
+    }: {
       imports = with flake.modules.nixos; [
         base
+        disko
+        impermanence
         niri
         sops
         zfs
@@ -13,7 +19,22 @@ in {
       networking.hostName = "dell-xps-9640";
       networking.hostId = "22770b28";
 
+      # Boot loader
+      boot.loader.systemd-boot.enable = true;
+      boot.loader.efi.canTouchEfiVariables = true;
+
+      # VM variant overrides
       virtualisation.vmVariant = {
+        disko.enableConfig = false;
+        boot.initrd.postDeviceCommands = lib.mkForce "";
+        environment.persistence = lib.mkForce {};
+        fileSystems."/persist" = lib.mkForce {
+          device = "tmpfs";
+          fsType = "tmpfs";
+        };
+        boot.loader.systemd-boot.enable = lib.mkForce false;
+        boot.loader.efi.canTouchEfiVariables = lib.mkForce false;
+
         virtualisation = {
           memorySize = 8192;
           cores = 4;
