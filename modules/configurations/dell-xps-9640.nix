@@ -12,6 +12,7 @@ in {
         disko
         impermanence
         niri
+        snros
         sops
         zfs
       ];
@@ -51,16 +52,6 @@ in {
             securityModel = "none";
           };
         };
-      };
-
-      users.mutableUsers = false;
-
-      sops.secrets."user-password".neededForUsers = true;
-
-      users.users.snros = {
-        isNormalUser = true;
-        hashedPasswordFile = config.sops.secrets."user-password".path;
-        extraGroups = ["wheel"];
       };
 
       system.stateVersion = "25.05";
