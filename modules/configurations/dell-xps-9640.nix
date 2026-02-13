@@ -7,9 +7,11 @@ in {
         base
         niri
         sops
+        zfs
       ];
 
       networking.hostName = "dell-xps-9640";
+      networking.hostId = "22770b28";
 
       virtualisation.vmVariant = {
         virtualisation = {
