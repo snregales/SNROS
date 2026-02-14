@@ -12,6 +12,7 @@ in {
         disko
         greetd
         impermanence
+        nh
         niri
         nix-index-database
         snros
