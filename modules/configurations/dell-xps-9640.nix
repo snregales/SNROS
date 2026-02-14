@@ -13,6 +13,7 @@ in {
         greetd
         impermanence
         niri
+        nix-index-database
         snros
         sops
         zfs
