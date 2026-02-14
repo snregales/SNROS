@@ -1,26 +1,38 @@
+# list available recipes
+default:
+    @echo "SNROS - NixOS Configuration Management"
+    @echo "Available hosts: $(nix eval .#nixosConfigurations --apply 'x: builtins.concatStringsSep ", " (builtins.attrNames x)' --raw)"
+    @echo ""
+    @just --list
+    @echo ""
+    @echo "Examples:"
+    @echo "  just build-vm vm"
+    @echo "  just run-vm dell-xps-9640"
+
+# open the development environment using the zellij terminal multiplexer
 dev:
     zellij --layout .zellij/layouts/dev.kdl
 
-build-vm:
-    nix build .#nixosConfigurations.vm.config.system.build.vm
+# compile a NixOS virtual machine image for the given host configuration
+build-vm host:
+    nix build .#nixosConfigurations.{{host}}.config.system.build.vm
 
-run-vm: build-vm
-    SOPS_AGE_KEY_DIR="$PWD/secrets/vm-key" nixGLIntel ./result/bin/run-snros-vm-vm
+# build then launch a NixOS VM
+run-vm host: (build-vm host)
+    SOPS_AGE_KEY_DIR="$PWD/secrets/vm-key" nixGLIntel ./result/bin/run-{{host}}-vm
 
-build-dell-xps-9640:
-    nix build .#nixosConfigurations.dell-xps-9640.config.system.build.vm
-
-run-dell-xps-9640: build-dell-xps-9640
-    SOPS_AGE_KEY_DIR="$PWD/secrets/vm-key" nixGLIntel ./result/bin/run-dell-xps-9640-vm
-
-update:
+# pull the latest versions of all flake inputs (nixpkgs, home-manager, etc.)
+update-flake:
     nix flake update
 
-fmt:
+# auto-format all nix files in the project using the configured formatter
+format-nix:
     nix fmt
 
-check:
+# evaluate the flake and run all checks (builds, tests, linting)
+check-flake:
     nix flake check
 
+# decrypt and open secrets.yaml in your editor for editing via sops
 edit-secrets:
     sops secrets/secrets.yaml
