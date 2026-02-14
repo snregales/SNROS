@@ -15,6 +15,7 @@ in {
     };
 
     home-manager.users.snros = {
+      imports = [flake.modules.homeManager.niri];
       home.stateVersion = "25.05";
     };
   };

@@ -10,6 +10,7 @@ in {
       imports = with flake.modules.nixos; [
         base
         disko
+        greetd
         impermanence
         niri
         snros

@@ -1,16 +1,7 @@
-{ inputs, ... }:
 {
-  flake.modules.nixos.niri =
+  flake.modules.nixos.greetd =
     { pkgs, ... }:
     {
-      imports = [ inputs.niri.nixosModules.niri ];
-
-      nixpkgs.overlays = [ inputs.niri.overlays.niri ];
-
-      programs.niri.enable = true;
-
-      environment.systemPackages = [ pkgs.foot ];
-
       services.greetd = {
         enable = true;
         settings = {
