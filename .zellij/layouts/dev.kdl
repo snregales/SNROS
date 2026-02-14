@@ -24,14 +24,4 @@ layout {
             pane name="git" size="40%" command="lazygit"
         }
     }
-
-    tab name="vm" {
-        pane split_direction="horizontal" {
-            pane name="build" size="70%" command="just" {
-                args "build-vm"
-                start_suspended true
-            }
-            pane name="logs" size="30%"
-        }
-    }
 }
