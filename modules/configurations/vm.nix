@@ -40,6 +40,14 @@ in {
         extraGroups = ["wheel"];
       };
 
+      # Minimal boot config required to pass NixOS assertions.
+      # The vmVariant overrides these at runtime.
+      fileSystems."/" = {
+        device = "/dev/vda";
+        fsType = "ext4";
+      };
+      boot.loader.grub.device = "/dev/vda";
+
       system.stateVersion = "25.05";
     };
   };
