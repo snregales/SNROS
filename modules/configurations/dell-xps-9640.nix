@@ -15,6 +15,7 @@ in {
         nh
         niri
         nix-index-database
+        noctalia
         snros
         sops
         zfs

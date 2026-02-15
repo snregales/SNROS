@@ -15,7 +15,10 @@ in {
     };
 
     home-manager.users.snros = {
-      imports = [flake.modules.homeManager.niri];
+      imports = [
+        flake.modules.homeManager.niri
+        flake.modules.homeManager.noctalia
+      ];
       home.stateVersion = "25.05";
     };
   };
