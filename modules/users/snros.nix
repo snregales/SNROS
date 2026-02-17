@@ -23,6 +23,7 @@ in {
         noctalia
         nvf
         starship
+        zellij
         zsh
       ];
       home.stateVersion = "25.05";
