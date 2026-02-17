@@ -20,6 +20,7 @@ in {
     home-manager.users.snros = {
       imports = with flake.modules.homeManager; [
         bat
+        eza
         niri
         noctalia
         nvf
