@@ -24,6 +24,7 @@ in {
         nvf
         starship
         zellij
+        zoxide
         zsh
       ];
       home.stateVersion = "25.05";
