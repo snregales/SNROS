@@ -18,6 +18,7 @@ in {
       imports = with flake.modules.homeManager; [
         niri
         noctalia
+        nvf
         starship
         zsh
       ];
