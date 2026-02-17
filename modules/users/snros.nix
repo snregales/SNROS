@@ -23,6 +23,7 @@ in {
         noctalia
         nvf
         starship
+        yazi
         zellij
         zoxide
         zsh
