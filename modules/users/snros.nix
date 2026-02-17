@@ -24,6 +24,7 @@ in {
         direnv
         eza
         fzf
+        git
         niri
         noctalia
         nvf
