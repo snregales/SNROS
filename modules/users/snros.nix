@@ -19,6 +19,7 @@ in {
 
     home-manager.users.snros = {
       imports = with flake.modules.homeManager; [
+        atuin
         bat
         eza
         fzf
