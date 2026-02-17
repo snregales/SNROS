@@ -10,8 +10,7 @@
       programs.niri.enable = true;
     };
 
-  flake.modules.homeManager.niri = {pkgs, ...}: {
-    home.packages = [pkgs.foot];
+  flake.modules.homeManager.niri = _: {
     programs.niri.settings = {};
   };
 }
