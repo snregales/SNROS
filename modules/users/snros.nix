@@ -23,6 +23,7 @@ in {
         bat
         direnv
         eza
+        foot
         fzf
         git
         niri
