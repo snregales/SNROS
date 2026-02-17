@@ -1,7 +1,9 @@
-{...}: {
-  flake.modules.homeManager.starship =
-    { ... }:
+_: {
+  flake.modules.homeManager.starship = _:
     {
-      programs.starship.enable = true;
+      programs.starship = {
+        enable = true;
+        enableZshIntegration = true;
+      };
     };
 }
