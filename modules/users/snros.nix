@@ -21,6 +21,7 @@ in {
       imports = with flake.modules.homeManager; [
         atuin
         bat
+        direnv
         eza
         fzf
         niri
