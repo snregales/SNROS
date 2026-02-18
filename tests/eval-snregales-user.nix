@@ -8,7 +8,7 @@ let
         flake.modules.nixos.base
         flake.modules.nixos.sops
         flake.modules.nixos.niri
-        flake.modules.nixos.snros
+        flake.modules.nixos.snregales
         { system.stateVersion = "25.05"; }
       ];
     }).config;
@@ -17,10 +17,10 @@ in
   perSystem =
     { pkgs, ... }:
     {
-      checks.eval-snros-user = pkgs.runCommand "eval-snros-user" { } ''
+      checks.eval-snregales-user = pkgs.runCommand "eval-snregales-user" { } ''
         ${assert cfg.users.mutableUsers == false; ""}
-        ${assert cfg.users.users.snros.isNormalUser; ""}
-        ${assert builtins.elem "wheel" cfg.users.users.snros.extraGroups; ""}
+        ${assert cfg.users.users.snregales.isNormalUser; ""}
+        ${assert builtins.elem "wheel" cfg.users.users.snregales.extraGroups; ""}
         touch $out
       '';
     };

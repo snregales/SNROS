@@ -34,7 +34,7 @@ in {
 
       sops.secrets."user-password".neededForUsers = true;
 
-      users.users.snros = {
+      users.users.snregales = {
         isNormalUser = true;
         hashedPasswordFile = config.sops.secrets."user-password".path;
         extraGroups = ["wheel"];
