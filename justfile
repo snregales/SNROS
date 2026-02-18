@@ -33,6 +33,10 @@ format-nix:
 check-flake:
     nix flake check
 
+# install NixOS on a target machine via SSH (requires a live Linux environment on the target)
+install host ip:
+    nix run github:nix-community/nixos-anywhere -- --flake .#{{host}} root@{{ip}}
+
 # decrypt and open secrets.yaml in your editor for editing via sops
 edit-secrets:
     sops secrets/secrets.yaml
