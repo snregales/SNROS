@@ -9,6 +9,7 @@ in {
     }: {
       imports = with flake.modules.nixos; [
         base
+        cachix
         disko
         greetd
         impermanence
