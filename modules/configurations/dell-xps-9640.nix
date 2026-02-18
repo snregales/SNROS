@@ -27,7 +27,7 @@ in {
       networking.hostId = "22770b28";
 
       # Boot loader
-      boot.loader.systemd-boot.enable = true;
+      boot.loader.limine.enable = true;
       boot.loader.efi.canTouchEfiVariables = true;
 
       # VM variant overrides
@@ -39,7 +39,7 @@ in {
           device = "tmpfs";
           fsType = "tmpfs";
         };
-        boot.loader.systemd-boot.enable = lib.mkForce false;
+        boot.loader.limine.enable = lib.mkForce false;
         boot.loader.efi.canTouchEfiVariables = lib.mkForce false;
 
         virtualisation = {
