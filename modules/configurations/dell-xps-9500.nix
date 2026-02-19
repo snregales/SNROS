@@ -12,6 +12,7 @@ in {
         base
         cachix
         disko
+        keyboard
         greetd
         impermanence
         nh
