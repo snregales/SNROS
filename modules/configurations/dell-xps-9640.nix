@@ -20,6 +20,7 @@ in {
         snregales
         sops
         stylix
+        uutils
         zfs
       ];
 
