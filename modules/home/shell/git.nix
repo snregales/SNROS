@@ -1,8 +1,10 @@
 _: {
-  flake.modules.homeManager.git = _: {
+  flake.modules.homeManager.git = {osConfig, ...}: {
     programs = {
       git = {
         enable = true;
+        userName = osConfig.snros.user.name;
+        userEmail = osConfig.snros.user.email;
         signing = {
           format = "ssh";
           signByDefault = true;

@@ -26,6 +26,11 @@ in {
         zfs
       ];
 
+      snros.user = {
+        name = "Sharlon N. Regales";
+        email = "sharlonregales@gmail.com";
+      };
+
       networking.hostName = "dell-xps-9500";
       networking.hostId = "99a0aaa7";
 

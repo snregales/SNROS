@@ -1,8 +1,15 @@
 {config, ...}: let
   inherit (config) flake;
 in {
-  flake.modules.nixos.snregales = {config, pkgs, ...}: {
-    imports = [ flake.modules.nixos.home-manager ];
+  flake.modules.nixos.snregales = {
+    config,
+    pkgs,
+    ...
+  }: {
+    imports = [
+      flake.modules.nixos.home-manager
+      flake.modules.nixos.variables
+    ];
 
     users.mutableUsers = false;
 
@@ -12,6 +19,7 @@ in {
 
     users.users.snregales = {
       isNormalUser = true;
+      description = config.snros.user.name;
       shell = pkgs.zsh;
       hashedPasswordFile = config.sops.secrets."user-password".path;
       extraGroups = ["wheel"];
