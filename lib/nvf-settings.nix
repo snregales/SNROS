@@ -165,53 +165,55 @@ in {
     # Autopairs
     autopairs.nvim-autopairs.enable = true;
 
-    # File manager
-    utility.yazi-nvim = {
-      enable = true;
-      mappings = {
-        yaziToggle = "<leader>fE";
-        openYaziDir = "<leader>fe";
-      };
-      setupOpts = {
-        open_for_directories = true;
-        floating_window_scaling_factor = 0.7;
-        yazi_floating_window_winblend = 30;
-        yazi_floating_window_border = "none";
-        integration = {
-          resolve_relative_path_application = "realpath";
-          grep_in_directory = mkLuaInline ''
-            function(directory)
-              require("fzf-lua").grep({ cwd = directory })
-            end
-          '';
-          grep_in_selected_files = mkLuaInline ''
-            function(selected_files)
-              require("fzf-lua").grep({ files = selected_files })
-            end
-          '';
+    # File manager + utilities
+    utility = {
+      yazi-nvim = {
+        enable = true;
+        mappings = {
+          yaziToggle = "<leader>fE";
+          openYaziDir = "<leader>fe";
         };
-        keymaps = {
-          grep_in_directory = "<c-f>";
-          replace_in_directory = "<c-r>";
-          send_to_quickfix_list = "Q";
-          open_and_pick_window = "W";
-          open_file_in_tab = false;
+        setupOpts = {
+          open_for_directories = true;
+          floating_window_scaling_factor = 0.7;
+          yazi_floating_window_winblend = 30;
+          yazi_floating_window_border = "none";
+          integration = {
+            resolve_relative_path_application = "realpath";
+            grep_in_directory = mkLuaInline ''
+              function(directory)
+                require("fzf-lua").grep({ cwd = directory })
+              end
+            '';
+            grep_in_selected_files = mkLuaInline ''
+              function(selected_files)
+                require("fzf-lua").grep({ files = selected_files })
+              end
+            '';
+          };
+          keymaps = {
+            grep_in_directory = "<c-f>";
+            replace_in_directory = "<c-r>";
+            send_to_quickfix_list = "Q";
+            open_and_pick_window = "W";
+            open_file_in_tab = false;
+          };
         };
       };
-    };
 
-    # Snacks
-    utility.snacks-nvim.enable = true;
-    utility.surround.enable = true;
-    utility.diffview-nvim.enable = true;
-    utility.motion = {
-      flash-nvim.enable = true;
-      hop.enable = true;
-      leap.enable = true;
-    };
-    utility.images.image-nvim = {
-      enable = true;
-      setupOpts.backend = "kitty";
+      # Snacks
+      snacks-nvim.enable = true;
+      surround.enable = true;
+      diffview-nvim.enable = true;
+      motion = {
+        flash-nvim.enable = true;
+        hop.enable = true;
+        leap.enable = true;
+      };
+      images.image-nvim = {
+        enable = true;
+        setupOpts.backend = "kitty";
+      };
     };
 
     # Projects & sessions

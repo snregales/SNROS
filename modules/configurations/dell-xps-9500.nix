@@ -1,12 +1,12 @@
-{config, inputs, ...}: let
+{
+  config,
+  inputs,
+  ...
+}: let
   inherit (config) flake;
 in {
   configurations.nixos.dell-xps-9500 = {
-    module = {
-      config,
-      lib,
-      ...
-    }: {
+    module = {lib, ...}: {
       imports = with flake.modules.nixos; [
         inputs.nixos-hardware.nixosModules.dell-xps-15-9500
         base
@@ -29,20 +29,26 @@ in {
       networking.hostId = "99a0aaa7";
 
       # Boot loader
-      boot.loader.limine.enable = true;
-      boot.loader.efi.canTouchEfiVariables = true;
+      boot.loader = {
+        limine.enable = true;
+        efi.canTouchEfiVariables = true;
+      };
 
       # VM variant overrides
       virtualisation.vmVariant = {
         disko.enableConfig = false;
-        boot.initrd.postDeviceCommands = lib.mkForce "";
+        boot = {
+          initrd.postDeviceCommands = lib.mkForce "";
+          loader = {
+            limine.enable = lib.mkForce false;
+            efi.canTouchEfiVariables = lib.mkForce false;
+          };
+        };
         environment.persistence = lib.mkForce {};
         fileSystems."/persist" = lib.mkForce {
           device = "tmpfs";
           fsType = "tmpfs";
         };
-        boot.loader.limine.enable = lib.mkForce false;
-        boot.loader.efi.canTouchEfiVariables = lib.mkForce false;
 
         virtualisation = {
           memorySize = 8192;

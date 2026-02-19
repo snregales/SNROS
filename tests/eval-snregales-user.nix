@@ -1,5 +1,8 @@
-{ config, inputs, ... }:
-let
+{
+  config,
+  inputs,
+  ...
+}: let
   inherit (config) flake;
   inherit (inputs.nixpkgs) lib;
   cfg =
@@ -9,19 +12,16 @@ let
         flake.modules.nixos.sops
         flake.modules.nixos.niri
         flake.modules.nixos.snregales
-        { system.stateVersion = "25.05"; }
+        {system.stateVersion = "25.05";}
       ];
     }).config;
-in
-{
-  perSystem =
-    { pkgs, ... }:
-    {
-      checks.eval-snregales-user = pkgs.runCommand "eval-snregales-user" { } ''
-        ${assert cfg.users.mutableUsers == false; ""}
-        ${assert cfg.users.users.snregales.isNormalUser; ""}
-        ${assert builtins.elem "wheel" cfg.users.users.snregales.extraGroups; ""}
-        touch $out
-      '';
-    };
+in {
+  perSystem = {pkgs, ...}: {
+    checks.eval-snregales-user = pkgs.runCommand "eval-snregales-user" {} ''
+      ${assert !cfg.users.mutableUsers; ""}
+      ${assert cfg.users.users.snregales.isNormalUser; ""}
+      ${assert builtins.elem "wheel" cfg.users.users.snregales.extraGroups; ""}
+      touch $out
+    '';
+  };
 }

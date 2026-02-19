@@ -1,5 +1,8 @@
 {inputs, ...}: {
+  imports = [inputs.git-hooks.flakeModule];
+
   perSystem = {
+    config,
     pkgs,
     system,
     ...
@@ -34,9 +37,17 @@
       modules = [nvfSettings ayuTheme];
     };
   in {
+    pre-commit.settings.hooks = {
+      alejandra.enable = true;
+      nil.enable = true;
+      statix.enable = true;
+      deadnix.enable = true;
+    };
+
     devShells.default = pkgs.mkShell {
       shellHook = ''
         alias ,='comma'
+        ${config.pre-commit.installationScript}
       '';
       packages = with pkgs;
         [
