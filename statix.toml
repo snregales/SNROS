@@ -1,0 +1,4 @@
+ignore = [
+  "tests/eval-impermanence.nix",
+  "modules/configurations/nixos.nix",
+]

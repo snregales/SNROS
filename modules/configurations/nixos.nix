@@ -1,5 +1,8 @@
-{ lib, config, ... }:
 {
+  lib,
+  config,
+  ...
+}: {
   options.configurations.nixos = lib.mkOption {
     type = lib.types.lazyAttrsOf (
       lib.types.submodule {
@@ -10,7 +13,12 @@
     );
   };
 
-  config.flake.nixosConfigurations = lib.mapAttrs (
-    name: { module }: lib.nixosSystem { modules = [ module ]; }
-  ) config.configurations.nixos;
+  config.flake.nixosConfigurations =
+    config.configurations.nixos
+    |> lib.mapAttrs (
+      _: {module}:
+        lib.nixosSystem {
+          modules = [module];
+        }
+    );
 }

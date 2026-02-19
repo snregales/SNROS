@@ -11,8 +11,8 @@ let
       ];
     }).config;
   persist = cfg.environment.persistence."/persist";
-  dirPaths = map (d: d.directory) persist.directories;
-  filePaths = map (f: f.filePath) persist.files;
+  dirPaths = persist.directories |> map (d: d.directory);
+  filePaths = persist.files |> map (f: f.filePath);
 in
 {
   perSystem =
