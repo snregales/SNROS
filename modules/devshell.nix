@@ -47,6 +47,7 @@
     devShells.default = pkgs.mkShell {
       shellHook = ''
         alias ,='comma'
+        export SOPS_AGE_KEY_CMD="op read op://snros/sops-age-key/notesPlain"
         ${config.pre-commit.installationScript}
       '';
       packages = with pkgs;

@@ -19,7 +19,11 @@ build-vm host:
 
 # build then launch a NixOS VM
 run-vm host: (build-vm host)
-    SOPS_AGE_KEY_DIR="$PWD/secrets/vm-key" nixGLIntel ./result/bin/run-{{host}}-vm
+    #!/usr/bin/env bash
+    key_dir=$(mktemp -d /run/user/$(id -u)/sops-vm.XXXXXX)
+    trap "rm -rf $key_dir" EXIT
+    $SOPS_AGE_KEY_CMD > "$key_dir/key.txt"
+    SOPS_AGE_KEY_DIR="$key_dir" nixGLIntel ./result/bin/run-{{host}}-vm
 
 # pull the latest versions of all flake inputs (nixpkgs, home-manager, etc.)
 update-flake:

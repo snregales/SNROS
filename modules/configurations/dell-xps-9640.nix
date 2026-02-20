@@ -4,6 +4,7 @@ in {
   configurations.nixos.dell-xps-9640 = {
     module = {lib, ...}: {
       imports = with flake.modules.nixos; [
+        _1password
         base
         cachix
         disko
@@ -62,7 +63,7 @@ in {
           ];
 
           sharedDirectories.sops-key = {
-            source = ''"''${SOPS_AGE_KEY_DIR:-$PWD/secrets/vm-key}"'';
+            source = ''"''${SOPS_AGE_KEY_DIR}"'';
             target = "/var/lib/sops-nix";
             securityModel = "none";
           };
