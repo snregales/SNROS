@@ -3,13 +3,14 @@ _: {
     programs = {
       git = {
         enable = true;
-        userName = osConfig.snros.user.name;
-        userEmail = osConfig.snros.user.email;
         signing = {
           format = "ssh";
+          key = osConfig.sops.secrets."git-ssh".path;
           signByDefault = true;
         };
         settings = {
+          user.name = osConfig.snros.user.name;
+          user.email = osConfig.snros.user.email;
           init.defaultBranch = "main";
           pull.rebase = true;
           push.autoSetupRemote = true;

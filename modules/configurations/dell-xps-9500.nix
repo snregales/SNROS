@@ -29,6 +29,9 @@ in {
       snros.user = {
         name = "Sharlon N. Regales";
         email = "sharlonregales@gmail.com";
+        sshPublicKeys = [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtZXJQLbehQuw2Dsmjy2Ko3yimTZr/GljTooplRgH9v snregales@git"
+        ];
       };
 
       networking.hostName = "dell-xps-9500";

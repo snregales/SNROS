@@ -14,6 +14,12 @@ in {
     users.mutableUsers = false;
 
     sops.secrets."user-password".neededForUsers = true;
+    sops.secrets."git-ssh" = {
+      owner = "snregales";
+      mode = "0600";
+    };
+
+    services.openssh.enable = true;
 
     programs.zsh.enable = true;
 
@@ -23,6 +29,7 @@ in {
       shell = pkgs.zsh;
       hashedPasswordFile = config.sops.secrets."user-password".path;
       extraGroups = ["wheel"];
+      openssh.authorizedKeys.keys = config.snros.user.sshPublicKeys;
     };
 
     home-manager.users.snregales = {

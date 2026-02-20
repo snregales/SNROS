@@ -10,6 +10,11 @@ _: {
           type = lib.types.str;
           description = "Email for use in git commits and other tools";
         };
+        sshPublicKeys = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [];
+          description = "SSH public keys for authorizing login";
+        };
       };
     };
   };
