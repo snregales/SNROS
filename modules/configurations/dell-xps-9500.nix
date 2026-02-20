@@ -12,6 +12,7 @@ in {
         _1password
         base
         cachix
+        packages
         disko
         keyboard
         greetd
