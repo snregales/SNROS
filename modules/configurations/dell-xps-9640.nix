@@ -6,6 +6,7 @@ in {
       imports = with flake.modules.nixos; [
         _1password
         base
+        biometrics
         cachix
         packages
         disko
@@ -41,6 +42,7 @@ in {
 
       # VM variant overrides
       virtualisation.vmVariant = {
+        services.fprintd.enable = false;
         disko.enableConfig = false;
         boot = {
           initrd.postDeviceCommands = lib.mkForce "";
