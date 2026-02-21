@@ -8,6 +8,7 @@ in {
   }: {
     imports = [
       flake.modules.nixos.home-manager
+      flake.modules.nixos.services
       flake.modules.nixos.variables
     ];
 
@@ -18,8 +19,6 @@ in {
       owner = "snregales";
       mode = "0600";
     };
-
-    services.openssh.enable = true;
 
     programs.zsh.enable = true;
 
