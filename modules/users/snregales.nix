@@ -36,6 +36,7 @@ in {
       imports = with flake.modules.homeManager; [
         atuin
         bat
+        brave
         direnv
         eza
         foot
