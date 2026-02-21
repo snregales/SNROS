@@ -1,14 +1,13 @@
-{ inputs, ... }:
-{
+{inputs, ...}: {
   flake.modules.nixos.noctalia = _: {
-      imports = [ inputs.noctalia.nixosModules.default ];
+    imports = [inputs.noctalia.nixosModules.default];
 
-      services.noctalia-shell.enable = true;
-    };
+    services.noctalia-shell.enable = true;
+  };
 
   flake.modules.homeManager.noctalia = _: {
-      imports = [ inputs.noctalia.homeModules.default ];
+    imports = [inputs.noctalia.homeModules.default];
 
-      programs.noctalia-shell.enable = true;
-    };
+    programs.noctalia-shell.enable = true;
+  };
 }
