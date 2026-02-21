@@ -7,6 +7,7 @@ in {
     ...
   }: {
     imports = [
+      flake.modules.nixos.desktop
       flake.modules.nixos.home-manager
       flake.modules.nixos.services
       flake.modules.nixos.variables
