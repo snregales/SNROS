@@ -10,6 +10,7 @@ in {
       flake.modules.nixos.desktop
       flake.modules.nixos.home-manager
       flake.modules.nixos.services
+      flake.modules.nixos.ssh
       flake.modules.nixos.variables
     ];
 
@@ -30,6 +31,7 @@ in {
     home-manager.users.snregales = {
       imports = with flake.modules.homeManager; [
         atuin
+        ssh
         bat
         brave
         direnv
