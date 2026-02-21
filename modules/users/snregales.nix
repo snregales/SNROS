@@ -20,7 +20,6 @@ in {
       owner = "snregales";
       mode = "0600";
     };
-
     programs.zsh.enable = true;
 
     users.users.snregales = {
@@ -42,6 +41,7 @@ in {
         foot
         fzf
         git
+        himalaya
         niri
         noctalia
         nvf
