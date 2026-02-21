@@ -6,6 +6,7 @@ in {
       _1password
       base
       biometrics
+      lanzaboote
       cachix
       packages
       disko
