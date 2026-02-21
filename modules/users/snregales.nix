@@ -16,10 +16,6 @@ in {
     users.mutableUsers = false;
 
     sops.secrets."user-password".neededForUsers = true;
-    sops.secrets."git-ssh" = {
-      owner = "snregales";
-      mode = "0600";
-    };
     programs.zsh.enable = true;
 
     users.users.snregales = {

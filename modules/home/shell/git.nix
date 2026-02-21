@@ -1,11 +1,17 @@
 _: {
   flake.modules.homeManager.git = {osConfig, ...}: {
+    # Use 1Password SSH agent for signing
+    programs.ssh.extraConfig = ''
+      Host *
+        IdentityAgent ~/.1password/agent.sock
+    '';
+
     programs = {
       git = {
         enable = true;
         signing = {
           format = "ssh";
-          key = osConfig.sops.secrets."git-ssh".path;
+          key = "key::${builtins.head osConfig.snros.user.sshPublicKeys}";
           signByDefault = true;
         };
         settings = {
