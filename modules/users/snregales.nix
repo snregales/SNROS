@@ -19,7 +19,7 @@ in {
     sops.secrets."user-password".neededForUsers = true;
     programs.zsh.enable = true;
 
-    users.users.snregales = {
+    users.users.${config.snros.user.username} = {
       isNormalUser = true;
       description = config.snros.user.name;
       shell = pkgs.zsh;
@@ -28,7 +28,7 @@ in {
       openssh.authorizedKeys.keys = config.snros.user.sshPublicKeys;
     };
 
-    home-manager.users.snregales = {
+    home-manager.users.${config.snros.user.username} = {
       imports = with flake.modules.homeManager; [
         atuin
         ssh

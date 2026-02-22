@@ -2,6 +2,10 @@ _: {
   flake.modules.nixos.variables = {lib, ...}: {
     options.snros = {
       user = {
+        username = lib.mkOption {
+          type = lib.types.str;
+          description = "System username";
+        };
         name = lib.mkOption {
           type = lib.types.str;
           description = "Full name for use in git commits and other tools";

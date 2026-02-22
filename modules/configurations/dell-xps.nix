@@ -1,7 +1,11 @@
 {config, ...}: let
   inherit (config) flake;
 in {
-  flake.modules.nixos.dell-xps = {lib, ...}: {
+  flake.modules.nixos.dell-xps = {
+    lib,
+    config,
+    ...
+  }: {
     imports = with flake.modules.nixos; [
       _1password
       base
@@ -25,6 +29,7 @@ in {
     ];
 
     snros.user = {
+      username = "snregales";
       name = "Sharlon N. Regales";
       email = "sharlonregales@gmail.com";
       sshPublicKeys = [
@@ -33,7 +38,7 @@ in {
     };
 
     # WiFi — profile created post-login via 1Password so op is authenticated
-    home-manager.users.snregales.home.activation.wifiNewYorkQuarterMaster = {
+    home-manager.users.${config.snros.user.username}.home.activation.wifiNewYorkQuarterMaster = {
       after = ["writeBoundary"];
       before = [];
       data = ''

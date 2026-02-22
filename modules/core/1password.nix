@@ -1,9 +1,9 @@
 _: {
-  flake.modules.nixos._1password = _: {
+  flake.modules.nixos._1password = {config, ...}: {
     programs._1password.enable = true;
     programs._1password-gui = {
       enable = true;
-      polkitPolicyOwners = ["snregales"];
+      polkitPolicyOwners = [config.snros.user.username];
     };
   };
 }
