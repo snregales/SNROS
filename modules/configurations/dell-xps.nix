@@ -25,6 +25,7 @@ in {
       snregales
       sops
       stylix
+      syncthing
       zfs
     ];
 
