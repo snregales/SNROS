@@ -63,6 +63,7 @@ in {
 
     # VM variant overrides
     virtualisation.vmVariant = {
+      imports = [flake.modules.nixos.vm-services];
       services.fprintd.enable = lib.mkForce false;
       disko.enableConfig = false;
       boot = {

@@ -5,6 +5,7 @@ in {
     module = _: {
       imports = [
         flake.modules.nixos.dell-xps
+        flake.modules.nixos.intel
       ];
 
       networking.hostName = "dell-xps-9640";
