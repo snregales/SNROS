@@ -17,6 +17,15 @@ in {
       networking.hostName = "dell-xps-9500";
       networking.hostId = "99a0aaa7";
 
+      boot.initrd.availableKernelModules = [
+        "xhci_pci"
+        "thunderbolt"
+        "nvme"
+        "usb_storage"
+        "sd_mod"
+        "rtsx_pci_sdmmc"
+      ];
+
       snros.hardware.gpu = {
         intel.busId = "PCI:0:2:0";
         nvidia.busId = "PCI:1:0:0";

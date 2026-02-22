@@ -10,6 +10,7 @@ in {
       _1password
       base
       biometrics
+      boot
       lanzaboote
       networking
       cachix
@@ -55,12 +56,6 @@ in {
       '';
     };
 
-    # Boot loader
-    boot.loader = {
-      limine.enable = true;
-      efi.canTouchEfiVariables = true;
-    };
-
     # VM variant overrides
     virtualisation.vmVariant = {
       imports = [flake.modules.nixos.vm-services];
@@ -68,10 +63,7 @@ in {
       disko.enableConfig = false;
       boot = {
         initrd.postDeviceCommands = lib.mkForce "";
-        loader = {
-          limine.enable = lib.mkForce false;
-          efi.canTouchEfiVariables = lib.mkForce false;
-        };
+        loader.efi.canTouchEfiVariables = lib.mkForce false;
       };
       environment.persistence = lib.mkForce {};
       fileSystems."/persist" = lib.mkForce {

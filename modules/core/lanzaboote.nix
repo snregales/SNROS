@@ -10,7 +10,6 @@
 
     boot = {
       loader = {
-        limine.enable = lib.mkForce false;
         systemd-boot.enable = lib.mkForce false;
       };
 
