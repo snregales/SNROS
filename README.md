@@ -1,141 +1,134 @@
 # SNROS
 
-Declarative NixOS system configuration built with Nix Flakes. Manages machine configurations, development tooling, and a fully-configured Neovim IDE through a modular architecture.
+Sharlon's NixOS system configuration — a modular, declarative setup for Dell XPS laptops built with Nix Flakes.
 
-## Project Structure
+## Features
+
+- **Ephemeral root** via ZFS + impermanence — clean slate on every boot, persistent data under `/persist`
+- **Secure Boot** via lanzaboote with sbctl
+- **Home Manager** for fully declarative user environments
+- **SOPS + age** for system secrets, **1Password** for user secrets
+- **Niri** Wayland compositor with Stylix theming (Ayu Dark)
+- **Neovim IDE** via nvf with LSP, treesitter, and debugger
+- **ZFS** with zstd compression, auto-scrub, and trim
+- **Zen kernel** with Plymouth boot splash
+
+## Hosts
+
+| Host | Hardware | GPU |
+|------|----------|-----|
+| `dell-xps-9500` | Dell XPS 15 9500 | Intel UHD + NVIDIA GTX 1650 Ti (PRIME offload) |
+| `dell-xps-9640` | Dell XPS 16 9640 | Intel Arc (integrated) |
+
+## Structure
 
 ```
-.
-├── flake.nix                    # Flake entry point — inputs and outputs
-├── flake.lock                   # Pinned dependency versions
-├── justfile                     # Command runner recipes
-├── .envrc                       # Direnv integration
-├── .zellij/layouts/dev.kdl      # Development environment layout
-└── modules/
-    ├── flake-parts.nix          # Flake-parts module system
-    ├── systems.nix              # Supported architectures (x86_64-linux)
-    ├── nix-settings.nix         # Nix experimental features and nixpkgs config
-    ├── devshell.nix             # Development shell packages
-    ├── formatting.nix           # Code formatter (alejandra)
-    ├── neovim.nix               # Neovim IDE configuration (nvf)
-    ├── stylix.nix               # System-wide theming (Ayu Dark)
-    └── configurations/
-        └── nixos.nix            # NixOS configuration builder
+modules/
+├── configurations/   # Per-host machine definitions
+├── core/             # System-level NixOS modules
+├── drivers/          # GPU/CPU and VM driver modules
+├── home/             # Home Manager modules (shell, apps, editor)
+└── users/            # User account definitions
+secrets/              # SOPS-encrypted secrets (age)
+tests/                # Evaluation and integration tests
+lib/                  # Shared library (Neovim config)
 ```
 
-## Prerequisites
+### Core modules
 
-- [Nix](https://nixos.org/download/) with flakes enabled
-- [direnv](https://direnv.net/) (optional, for automatic shell activation)
+| Module | Purpose |
+|--------|---------|
+| `boot` | Zen kernel, systemd-boot, Plymouth, tmpfs `/tmp`, v4l2loopback |
+| `networking` | NetworkManager + iwd backend, impala WiFi TUI, firewall |
+| `impermanence` | Ephemeral root, `/persist` persistence |
+| `lanzaboote` | Secure Boot |
+| `disko` | Declarative disk partitioning (GPT + ZFS) |
+| `zfs` | ZFS pool, auto-scrub and trim |
+| `sops` | Encrypted secrets via age |
+| `ssh` | OpenSSH server + 1Password SSH agent (home-manager) |
+| `1password` | 1Password CLI + GUI with polkit |
+| `biometrics` | Fingerprint auth via fprintd (Goodix TOD) |
+| `desktop` | PipeWire, Bluetooth (blueman + bluetui), keyring, image previews |
+| `syncthing` | File sync with persisted state and SOPS-managed GUI password |
+| `variables` | Shared options (`snros.user.*`, `snros.hardware.gpu.*`) |
 
-## Getting Started
+### Driver modules
 
-Clone the repository and enter the development shell:
+| Module | Purpose |
+|--------|---------|
+| `intel` | Intel graphics, VA-API, microcode updates |
+| `nvidia` | NVIDIA open driver, PRIME offload, fine-grained power management |
+| `amd` | AMD graphics, AMDVLK, ROCm OpenCL, microcode updates |
+| `vm-services` | QEMU guest agent + SPICE (VM builds only) |
+
+### Home modules
+
+**Shell:** `zsh`, `atuin`, `starship`, `bat`, `eza`, `fzf`, `yazi`, `zoxide`, `direnv`, `zellij`
+
+**Apps:** `brave` (SponsorBlock, Google Translate, 1Password, Vimium C), `foot`, `niri`, `nvf`, `himalaya` (Gmail)
+
+## Secrets philosophy
+
+| Secret type | Tool | Examples |
+|------------|------|---------|
+| System secrets | SOPS + age | User password, Syncthing GUI password |
+| User secrets | 1Password (`op read`) | Git signing key, Gmail password, WiFi PSK |
+
+## Usage
+
+### Prerequisites
+
+- 1Password CLI (`op`) authenticated
+- SOPS age key accessible via `$SOPS_AGE_KEY_CMD`
+
+### Development
 
 ```sh
-git clone <repo-url> && cd SNROS
-direnv allow   # or: nix develop
+just dev               # Launch Zellij environment (editor + shell + VM)
+just format-nix        # Format all Nix files with alejandra
+just check-flake       # Run all checks and tests
+just update-flake      # Update all flake inputs
+just edit-secrets      # Decrypt and edit secrets.yaml
 ```
 
-Launch the full development environment:
+### VM testing
 
 ```sh
-just dev
+just build-vm <host>   # Build a VM image
+just run-vm <host>     # Build and run VM (SOPS key injected automatically)
 ```
 
-This opens a [Zellij](https://zellij.dev/) session with three tabs:
-
-| Tab | Contents |
-|-----|----------|
-| **editor** | Neovim with floating Claude CLI |
-| **shell** | Nix shell + Lazygit side-by-side |
-| **vm** | VM build runner + logs |
-
-## Commands
-
-All commands are run via [just](https://just.systems/):
+### Deployment
 
 ```sh
-just dev        # Launch Zellij development environment
-just build-vm   # Build the NixOS VM
-just run-vm     # Build and run the VM
-just fmt        # Format all Nix files with alejandra
-just check      # Run flake checks
-just update     # Update flake inputs
+just install <host> <ip>   # Deploy to target via SSH (requires live Linux on target)
 ```
 
-## Flake Inputs
+## Adding a new host
 
-| Input | Purpose |
-|-------|---------|
-| [nixpkgs](https://github.com/NixOS/nixpkgs) (unstable) | Package repository |
-| [flake-parts](https://github.com/hercules-ci/flake-parts) | Modular flake architecture |
-| [import-tree](https://github.com/vic/import-tree) | Automatic module discovery |
-| [home-manager](https://github.com/nix-community/home-manager) | User environment management |
-| [niri](https://github.com/sodiboo/niri-flake) | Wayland scrollable-tiling window manager |
-| [nvf](https://github.com/NotAShelf/nvf) | Neovim configuration framework |
-| [stylix](https://github.com/nix-community/stylix) | System-wide theming |
-
-## Modules
-
-### `configurations/nixos.nix`
-
-Defines a `configurations.nixos` option that maps attribute sets to `flake.nixosConfigurations`. Each entry takes a `module` (a deferred NixOS module) and produces a full `nixosSystem`.
-
-### `devshell.nix`
-
-Provides the default development shell with: alejandra, nil (Nix LSP), git, just, fzf, yazi, zellij, and a custom neovim build.
-
-### `neovim.nix`
-
-Full IDE configuration via nvf. Exported both as a NixOS module (`flake.modules.nixos.neovim`) and a standalone package (`packages.neovim`).
-
-Key features:
-- **Theme**: Base16 Ayu Dark
-- **LSP**: lspconfig, lspsaga, lightbulb, trouble, format-on-save
-- **Languages**: Nix, Lua, Rust, Python, C, Bash, HTML, YAML, Markdown
-- **Treesitter**: 24 grammars with folding and context
-- **Completion**: blink-cmp with signature help and LuaSnip snippets
-- **Search**: FzfLua (files, grep, LSP symbols) and Snacks pickers
-- **Git**: gitsigns, diffview, git pickers
-- **Navigation**: flash.nvim, hop, leap
-- **UI**: lualine, noice, which-key, colorizer, fidget, mini starter
-- **Extras**: yazi file manager, project/session management, nvim-dap debugger, todo-comments
-
-Leader key is `<Space>`. See `modules/neovim.nix` for the full keymap reference (80+ bindings).
-
-### `stylix.nix`
-
-Applies the Ayu Dark base16 color scheme system-wide via Stylix. Exposed as `flake.modules.nixos.stylix`.
-
-### `formatting.nix`
-
-Sets [alejandra](https://github.com/kamadorueda/alejandra) as the project-wide Nix formatter.
-
-## Adding a NixOS Configuration
-
-Define a new machine in any module under `modules/`:
+1. Create `modules/configurations/<hostname>.nix`
+2. Import `flake.modules.nixos.dell-xps` (or build a custom base)
+3. Set `networking.hostName`, `networking.hostId`, and `snros.user.*`
+4. Import the appropriate driver modules (`intel`, `nvidia`, `amd`)
+5. Set GPU bus IDs from `lspci | grep -E "VGA|3D"` (convert `aa:bb.c` → `PCI:aa:bb:c`)
+6. List `boot.initrd.availableKernelModules` for the hardware
 
 ```nix
-{ ... }:
-{
-  configurations.nixos.my-machine = {
-    module = { pkgs, ... }: {
-      imports = [
-        # hardware configuration, other modules...
-      ];
-      # NixOS options here
+configurations.nixos.my-host = {
+  module = _: {
+    imports = [
+      flake.modules.nixos.dell-xps
+      flake.modules.nixos.intel
+    ];
+    networking.hostName = "my-host";
+    networking.hostId = "xxxxxxxx"; # head -c8 /etc/machine-id
+    snros.user = {
+      username = "myuser";
+      name = "Full Name";
+      email = "email@example.com";
+      sshPublicKeys = [ "ssh-ed25519 ..." ];
     };
+    boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "usb_storage" ];
   };
-}
+};
 ```
-
-Then build it:
-
-```sh
-nix build .#nixosConfigurations.my-machine.config.system.build.toplevel
-```
-
-## License
-
-TBD
