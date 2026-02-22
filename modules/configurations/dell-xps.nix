@@ -7,6 +7,7 @@ in {
       base
       biometrics
       lanzaboote
+      networking
       cachix
       packages
       disko
@@ -29,6 +30,23 @@ in {
       sshPublicKeys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtZXJQLbehQuw2Dsmjy2Ko3yimTZr/GljTooplRgH9v snregales@git"
       ];
+    };
+
+    # WiFi — profile created post-login via 1Password so op is authenticated
+    home-manager.users.snregales.home.activation.wifiNewYorkQuarterMaster = {
+      after = ["writeBoundary"];
+      before = [];
+      data = ''
+        if ! nmcli connection show "NewYorkQuarterMaster" &>/dev/null; then
+          psk=$(op read "op://snros/NewYorkQuarterMaster/password")
+          nmcli connection add \
+            type wifi \
+            con-name "NewYorkQuarterMaster" \
+            ssid "NewYorkQuarterMaster" \
+            wifi-sec.key-mgmt wpa-psk \
+            wifi-sec.psk "$psk"
+        fi
+      '';
     };
 
     # Boot loader

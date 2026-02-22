@@ -24,7 +24,7 @@ in {
       description = config.snros.user.name;
       shell = pkgs.zsh;
       hashedPasswordFile = config.sops.secrets."user-password".path;
-      extraGroups = ["wheel"];
+      extraGroups = ["wheel" "networkmanager"];
       openssh.authorizedKeys.keys = config.snros.user.sshPublicKeys;
     };
 

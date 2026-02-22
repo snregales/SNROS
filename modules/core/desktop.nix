@@ -1,5 +1,7 @@
 _: {
-  flake.modules.nixos.desktop = _: {
+  flake.modules.nixos.desktop = {pkgs, ...}: {
+    environment.systemPackages = [pkgs.bluetui];
+
     services = {
       blueman.enable = true; # Bluetooth Support
       tumbler.enable = true; # Image/video preview
