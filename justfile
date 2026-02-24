@@ -44,3 +44,7 @@ install host ip:
 # decrypt and open secrets.yaml in your editor for editing via sops
 edit-secrets:
     sops secrets/secrets.yaml
+
+# re-encrypt secrets.yaml via sops
+re-encrypt-secrets:
+    sops updatekeys secrets/secrets.yaml
