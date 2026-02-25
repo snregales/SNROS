@@ -37,9 +37,56 @@ format-nix:
 check-flake:
     nix flake check
 
+# generate a pre-install SSH host key for a host and print its age public key
+# run once per host, then add the age key to .sops.yaml and re-encrypt secrets
+gen-host-key host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    key=hosts/{{host}}/etc/ssh/ssh_host_ed25519_key
+    if [ -f "$key" ]; then
+      echo "Key already exists at $key — delete it first to regenerate"
+      exit 1
+    fi
+    mkdir -p "$(dirname $key)"
+    ssh-keygen -t ed25519 -f "$key" -N "" -C "{{host}}"
+    chmod 600 "$key"
+    age_key=$(ssh-to-age < "$key.pub")
+    echo ""
+    echo "Age public key for {{host}}:"
+    echo "  $age_key"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Uncomment and fill in &{{host}} in .sops.yaml"
+    echo "  2. just re-encrypt-secrets"
+    echo "  3. git add hosts/{{host}}/etc/ssh/ssh_host_ed25519_key.pub"
+    echo "  4. just install {{host}} <ip>"
+
+# generate secure boot keys for a host using sbctl and store them in hosts/<host>/persist/secureboot
+# run once per host, then run just install <host> <ip>
+gen-secureboot-keys host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out="{{justfile_directory()}}/hosts/{{host}}/persist/secureboot"
+    if [ -d "$out/keys" ]; then
+      echo "Secure boot keys already exist at $out — delete them first to regenerate"
+      exit 1
+    fi
+    mkdir -p "$out"
+    sbctl create-keys --export "$out/keys" --disable-landlock
+    chown -R "$(stat -c '%U:%G' "{{justfile_directory()}}")" "$out"
+    echo ""
+    echo "Secure boot keys generated at $out"
+    echo ""
+    echo "Next steps:"
+    echo "  1. just install {{host}} <ip>"
+    echo "  2. After first boot, enroll keys: sbctl enroll-keys --microsoft"
+
 # install NixOS on a target machine via SSH (requires a live Linux environment on the target)
+# run just gen-host-key <host> and just gen-secureboot-keys <host> first
 install host ip:
-    nix run github:nix-community/nixos-anywhere -- --flake .#{{host}} root@{{ip}}
+    nix run github:nix-community/nixos-anywhere -- \
+      --extra-files hosts/{{host}} \
+      --flake .#{{host}} root@{{ip}}
 
 # decrypt and open secrets.yaml in your editor for editing via sops
 edit-secrets:
