@@ -4,3 +4,5 @@ result-*
 .direnv/
 secrets/vm-key/
 .pre-commit-config.yaml
+hosts/*/etc/ssh/ssh_host_ed25519_key
+hosts/*/persist/secureboot/

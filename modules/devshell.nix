@@ -61,6 +61,8 @@
           zellij
           sops
           age
+          ssh-to-age
+          sbctl
         ]
         ++ [
           inputs.nix-index-database.packages.${system}.comma-with-db
