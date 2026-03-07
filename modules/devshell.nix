@@ -40,8 +40,17 @@
     pre-commit.settings.hooks = {
       alejandra.enable = true;
       nil.enable = true;
-      statix.enable = true;
-      deadnix.enable = true;
+      statix = {
+        enable = true;
+        settings.ignore = [
+          "hardware-configuration.nix"
+          "modules/hosts/nixos.nix"
+        ];
+      };
+      deadnix = {
+        enable = true;
+        excludes = ["hardware-configuration\\.nix$"];
+      };
     };
 
     devShells.default = pkgs.mkShell {
