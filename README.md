@@ -18,20 +18,22 @@ Sharlon's NixOS system configuration — a modular, declarative setup for Dell X
 | Host | Hardware | GPU |
 |------|----------|-----|
 | `dell-xps-9500` | Dell XPS 15 9500 | Intel UHD + NVIDIA GTX 1650 Ti (PRIME offload) |
-| `dell-xps-9640` | Dell XPS 16 9640 | Intel Arc (integrated) |
+| `dell-xps-9640` | Dell XPS 16 9640 | Intel Arc + NVIDIA (PRIME offload) |
 
 ## Structure
 
 ```
+devices/              # Per-host hardware (hardware-configuration.nix, generated)
 modules/
-├── configurations/   # Per-host machine definitions
+├── hosts/            # Per-host machine definitions
 ├── core/             # System-level NixOS modules
 ├── drivers/          # GPU/CPU and VM driver modules
 ├── home/             # Home Manager modules (shell, apps, editor)
 └── users/            # User account definitions
+hosts/                # Generated host files: SSH keys, secureboot keys
+lib/                  # Shared library functions
 secrets/              # SOPS-encrypted secrets (age)
 tests/                # Evaluation and integration tests
-lib/                  # Shared library (Neovim config)
 ```
 
 ### Core modules
@@ -41,7 +43,7 @@ lib/                  # Shared library (Neovim config)
 | `boot` | Zen kernel, systemd-boot, Plymouth, tmpfs `/tmp`, v4l2loopback |
 | `networking` | NetworkManager + iwd backend, impala WiFi TUI, firewall |
 | `impermanence` | Ephemeral root, `/persist` persistence |
-| `lanzaboote` | Secure Boot |
+| `lanzaboote` | Secure Boot (opt-in per host) |
 | `disko` | Declarative disk partitioning (GPT + ZFS) |
 | `zfs` | ZFS pool, auto-scrub and trim |
 | `sops` | Encrypted secrets via age |
@@ -101,34 +103,53 @@ just run-vm <host>     # Build and run VM (SOPS key injected automatically)
 ### Deployment
 
 ```sh
-just install <host> <ip>   # Deploy to target via SSH (requires live Linux on target)
+# One-time setup per host (run before install)
+just gen-host-key <host>            # Generate SSH host key, prints age public key
+just gen-secureboot-keys <host>     # Generate secure boot keys (if using lanzaboote)
+
+# Fetch hardware config from a live NixOS ISO booted on the target
+just gen-hardware-config <host> <ip>          # Generate (skips if exists)
+just gen-hardware-config <host> <ip> true     # Force regenerate
+
+# Install
+just install <host> <ip>            # Deploy via nixos-anywhere (requires NixOS live on target)
 ```
+
+**Live ISO prerequisites** (on the target machine):
+1. `passwd` — set a root password
+2. `ip addr` — note the IP address
+3. WiFi (if needed): `iwctl station wlan0 connect <SSID>`
 
 ## Adding a new host
 
-1. Create `modules/configurations/<hostname>.nix`
-2. Import `flake.modules.nixos.dell-xps` (or build a custom base)
-3. Set `networking.hostName`, `networking.hostId`, and `snros.user.*`
-4. Import the appropriate driver modules (`intel`, `nvidia`, `amd`)
-5. Set GPU bus IDs from `lspci | grep -E "VGA|3D"` (convert `aa:bb.c` → `PCI:aa:bb:c`)
-6. List `boot.initrd.availableKernelModules` for the hardware
+1. Boot the target from a NixOS installer ISO
+2. Run `just gen-hardware-config <hostname> <ip>` to capture hardware info
+3. Run `just gen-host-key <hostname>` — add the printed age key to `.sops.yaml`, then `just re-encrypt-secrets`
+4. Create `modules/hosts/<hostname>/configuration.nix`:
+   - Import `flake.modules.nixos.dell-xps` (or build a custom base)
+   - Import hardware config via `lib/mkHardwareConfig.nix`
+   - Set `networking.hostName`, `networking.hostId`
+   - Import driver modules (`intel`, `nvidia`, `amd`)
+   - Set GPU bus IDs from `lspci | grep -E "VGA|3D"` (convert `aa:bb.c` → `PCI:aa:bb:c`)
+5. Run `just install <hostname> <ip>`
 
 ```nix
-configurations.nixos.my-host = {
-  module = _: {
-    imports = [
-      flake.modules.nixos.dell-xps
-      flake.modules.nixos.intel
-    ];
-    networking.hostName = "my-host";
-    networking.hostId = "xxxxxxxx"; # head -c8 /etc/machine-id
-    snros.user = {
-      username = "myuser";
-      name = "Full Name";
-      email = "email@example.com";
-      sshPublicKeys = [ "ssh-ed25519 ..." ];
+{config, ...}: let
+  inherit (config) flake;
+  mkHardwareConfig = import ../../../lib/mkHardwareConfig.nix;
+in {
+  configurations.nixos.my-host = {
+    module = _: {
+      imports = [
+        (mkHardwareConfig ../../../devices/my-host/hardware-configuration.nix)
+        flake.modules.nixos.dell-xps
+        flake.modules.nixos.intel
+      ];
+      networking = {
+        hostName = "my-host";
+        hostId = "xxxxxxxx"; # head -c8 /etc/machine-id
+      };
     };
-    boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "usb_storage" ];
   };
-};
+}
 ```

@@ -42,7 +42,7 @@ check-flake:
 gen-host-key host:
     #!/usr/bin/env bash
     set -euo pipefail
-    key=hosts/{{host}}/etc/ssh/ssh_host_ed25519_key
+    key=modules/hosts/{{host}}/etc/ssh/ssh_host_ed25519_key
     if [ -f "$key" ]; then
       echo "Key already exists at $key — delete it first to regenerate"
       exit 1
@@ -66,7 +66,7 @@ gen-host-key host:
 gen-secureboot-keys host:
     #!/usr/bin/env bash
     set -euo pipefail
-    out="{{justfile_directory()}}/hosts/{{host}}/persist/secureboot"
+    out="{{justfile_directory()}}/modules/hosts/{{host}}/persist/secureboot"
     if [ -d "$out/keys" ]; then
       echo "Secure boot keys already exist at $out — delete them first to regenerate"
       exit 1
@@ -81,11 +81,27 @@ gen-secureboot-keys host:
     echo "  1. just install {{host}} <ip>"
     echo "  2. After first boot, enroll keys: sbctl enroll-keys --microsoft"
 
+# fetch hardware-configuration.nix from a target machine booted into a NixOS live environment
+# outputs to modules/hosts/<host>/hardware-configuration.nix
+# pass force=true to overwrite an existing file
+gen-hardware-config host ip force="false":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out="{{justfile_directory()}}/devices/{{host}}"
+    file="$out/hardware-configuration.nix"
+    if [ -f "$file" ] && [ "{{force}}" != "true" ]; then
+      echo "hardware-configuration.nix already exists for {{host}}. Use 'just gen-hardware-config {{host}} {{ip}} true' to overwrite."
+      exit 0
+    fi
+    mkdir -p "$out"
+    ssh root@{{ip}} "nixos-generate-config --show-hardware-config" > "$file"
+    echo "Hardware config written to $file"
+
 # install NixOS on a target machine via SSH (requires a live Linux environment on the target)
 # run just gen-host-key <host> and just gen-secureboot-keys <host> first
 install host ip:
     nix run github:nix-community/nixos-anywhere -- \
-      --extra-files hosts/{{host}} \
+      --extra-files modules/hosts/{{host}} \
       --flake .#{{host}} root@{{ip}}
 
 # decrypt and open secrets.yaml in your editor for editing via sops
