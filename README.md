@@ -113,6 +113,13 @@ just gen-hardware-config <host> <ip> true     # Force regenerate
 
 # Install
 just install <host> <ip>            # Deploy via nixos-anywhere (requires NixOS live on target)
+
+# First boot (hosts with lanzaboote)
+# 1. Reboot into UEFI firmware (F2 on Dell)
+# 2. Secure Boot: keep ENABLED, but clear/delete all keys — this enters Setup Mode
+# 3. Save and boot back into NixOS, then run:
+sudo sbctl enroll-keys --microsoft  # Enroll your keys + Microsoft's into UEFI firmware
+# 4. Reboot — Secure Boot is now active with your custom keys
 ```
 
 **Live ISO prerequisites** (on the target machine):
