@@ -7,6 +7,9 @@ _: {
     ifSet = busId: lib.mkIf (busId != null) busId;
     inherit (config.snros.hardware) gpu;
   in {
+    # Required to load nvidia kernel modules (even on Wayland-only setups)
+    services.xserver.videoDrivers = ["nvidia"];
+
     hardware.nvidia = {
       modesetting.enable = true;
       open = true;

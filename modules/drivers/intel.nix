@@ -1,6 +1,11 @@
 _: {
   flake.modules.nixos.intel = {pkgs, ...}: {
+    # i915 conflicts with xe on Intel Arc (Meteor Lake Xe-LPG); xe is the correct driver
+    boot.blacklistedKernelModules = ["i915"];
+
     hardware = {
+      enableRedistributableFirmware = true;
+
       graphics = {
         enable = true;
         extraPackages = with pkgs; [
