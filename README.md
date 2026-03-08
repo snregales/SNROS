@@ -65,7 +65,7 @@ just gen-hardware-config <host> <ip> # fetches hardware-configuration.nix from t
 **Deploy:**
 
 ```sh
-just install <host> <ip>
+just deploy <host> <ip>
 ```
 
 **First boot (hosts with lanzaboote):**
@@ -260,7 +260,7 @@ in {
 }
 ```
 
-6. `just install <host> <ip>`
+6. `just deploy <host> <ip>`
 
 ### Adjusting the development shell
 

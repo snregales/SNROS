@@ -101,9 +101,9 @@ gen-hardware-config host ip force="false":
     ssh root@{{ip}} "nixos-generate-config --show-hardware-config" > "$file"
     echo "Hardware config written to $file"
 
-# install NixOS on a target machine via SSH (requires a live Linux environment on the target)
+# deploy NixOS to a target machine via SSH (requires a live Linux environment on the target)
 # run just gen-host-key <host> and just gen-secureboot-keys <host> first
-install host ip:
+deploy host ip:
     nix run github:nix-community/nixos-anywhere -- \
       --extra-files modules/hosts/{{host}} \
       --flake .#{{host}} root@{{ip}}
