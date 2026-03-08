@@ -51,6 +51,8 @@
         enable = true;
         excludes = ["hardware-configuration\\.nix$"];
       };
+      ripsecrets.enable = true;
+      pre-commit-hook-ensure-sops.enable = true;
     };
 
     devShells.default = pkgs.mkShell {
