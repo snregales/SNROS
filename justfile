@@ -37,6 +37,10 @@ format-nix:
 check-flake:
     nix flake check
 
+# run the installer integration test in a NixOS VM (requires KVM)
+test-installer:
+    nix build .#checks.x86_64-linux.installer-dry-run -L
+
 # generate a pre-install SSH host key for a host and print its age public key
 # run once per host, then add the age key to .sops.yaml and re-encrypt secrets
 gen-host-key host:

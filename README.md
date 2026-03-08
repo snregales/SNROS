@@ -19,6 +19,22 @@
 - [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) authenticated
 - SOPS age key accessible — in the dev shell, `$SOPS_AGE_KEY_CMD` reads it from 1Password automatically
 
+### Curl install (live ISO)
+
+The fastest path from bare metal to a running system. Boot the target from a [NixOS live ISO](https://nixos.org/download), then run:
+
+```sh
+curl -sSf https://raw.githubusercontent.com/snregales/snros/main/install.sh | sh -s -- <host>
+```
+
+The installer will:
+1. Check for a pre-generated SSH host key — if missing, generate one and print the age public key, then pause with instructions to update `.sops.yaml` on your dev machine before continuing
+2. Generate hardware config automatically if not already in the repo
+3. Generate secureboot keys if not already in the repo
+4. Confirm the disk to wipe, then run disko and `nixos-install`
+
+> **Note:** The SSH host key step requires a round-trip to your dev machine the first time (`just re-encrypt-secrets` + push). All other prerequisites are handled automatically.
+
 ### Remote install (nixos-anywhere)
 
 The primary path for deploying to a bare-metal machine. Requires the target to be booted into a NixOS live ISO.
@@ -85,6 +101,12 @@ just run-vm <host>                       # builds VM image, then launches it
 ```
 
 The VM variant disables disko, impermanence, and biometrics. `just run-vm` automatically injects the SOPS age key (read from 1Password via `$SOPS_AGE_KEY_CMD`) into the VM via a shared directory — do not launch the VM binary directly. Requires `nixGLIntel` (included in the dev shell) for GPU-accelerated rendering.
+
+The installer script also supports a `--dry-run` flag that skips disk partitioning and NixOS installation while running all other steps (key generation, hardware detection):
+
+```sh
+nix run github:snregales/snros#install -- --dry-run <host>
+```
 
 ## Project Structure
 
