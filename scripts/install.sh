@@ -1,14 +1,31 @@
 #!/usr/bin/env bash
 # SNROS interactive installer
-# Invoked via: curl -sSf https://raw.githubusercontent.com/snregales/snros/main/install.sh | sh -s -- <host>
-# Or directly: nix run github:snregales/snros#install -- <host>
+# Invoked via: curl -sSf https://raw.githubusercontent.com/snregales/snros/main/install.sh | sh -s -- [--dry-run] <host>
+# Or directly: nix run github:snregales/snros#install -- [--dry-run] <host>
+# --dry-run: generate prerequisites (SSH key, hardware config, secureboot keys) but skip disk wipe and nixos-install
 
 set -euo pipefail
 
 # Ensure NixOS live ISO system tools are available alongside nix-provided runtimeInputs
 export PATH="/run/current-system/sw/bin:${PATH}"
 
-CLONE_DIR="/tmp/snros"
+# Allow tests to inject a pre-populated clone directory (skips git clone)
+CLONE_DIR="${SNROS_CLONE_DIR:-/tmp/snros}"
+
+DRY_RUN=false
+args=()
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=true ;;
+    *) args+=("$arg") ;;
+  esac
+done
+if [[ ${#args[@]} -gt 0 ]]; then
+  set -- "${args[@]}"
+else
+  set --
+fi
+
 BOLD="\033[1m"
 RED="\033[31m"
 GREEN="\033[32m"
@@ -28,7 +45,7 @@ if [[ -z "$HOST" ]]; then
   echo "Available hosts:"
   hosts=$(nix eval "github:snregales/snros#nixosConfigurations" \
     --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)' \
-    --raw 2>/dev/null) && echo "$hosts" | sed 's/^/  /' || echo "  (could not enumerate hosts)"
+    --raw 2>/dev/null) && while IFS= read -r line; do echo "  $line"; done <<<"$hosts" || echo "  (could not enumerate hosts)"
   echo ""
   read -rp "Enter host name: " HOST
 fi
@@ -38,25 +55,37 @@ if [[ -z "$HOST" ]]; then
   exit 1
 fi
 
-info "Installing SNROS host: ${HOST}"
+if $DRY_RUN; then
+  info "[DRY RUN] Installing SNROS host: ${HOST}"
+else
+  info "Installing SNROS host: ${HOST}"
+fi
 
 # --- Clone repo ---
-info "Cloning repository to ${CLONE_DIR}..."
-if [[ -d "$CLONE_DIR" ]]; then
-  warn "${CLONE_DIR} already exists — removing and re-cloning (any previously generated keys or configs will be lost)"
-  rm -rf "$CLONE_DIR"
+if [[ -n "${SNROS_CLONE_DIR:-}" ]]; then
+  info "Using pre-populated repository at ${CLONE_DIR} (SNROS_CLONE_DIR is set)"
+else
+  info "Cloning repository to ${CLONE_DIR}..."
+  if [[ -d "$CLONE_DIR" ]]; then
+    warn "${CLONE_DIR} already exists — removing and re-cloning (any previously generated keys or configs will be lost)"
+    rm -rf "$CLONE_DIR"
+  fi
+  git clone --depth 1 https://github.com/snregales/snros "$CLONE_DIR"
 fi
-git clone --depth 1 https://github.com/snregales/snros "$CLONE_DIR"
 
 # --- Validate host ---
-if ! nix eval "${CLONE_DIR}#nixosConfigurations.${HOST}" --apply 'x: true' --raw &>/dev/null; then
-  err "Host '${HOST}' not found in nixosConfigurations. Available hosts:"
-  nix eval "${CLONE_DIR}#nixosConfigurations" \
-    --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)' \
-    --raw 2>/dev/null | sed 's/^/  /' || true
-  exit 1
+# Host validation is skipped when SNROS_CLONE_DIR is set (test mode: no network available)
+if [[ -z "${SNROS_CLONE_DIR:-}" ]]; then
+  if ! nix eval "${CLONE_DIR}#nixosConfigurations.${HOST}" --apply 'x: true' --raw &>/dev/null; then
+    err "Host '${HOST}' not found in nixosConfigurations. Available hosts:"
+    nix eval "${CLONE_DIR}#nixosConfigurations" \
+      --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)' \
+      --raw 2>/dev/null | while IFS= read -r line; do echo "  $line"; done || true
+    exit 1
+  fi
 fi
 
+# Prerequisites run in both normal and dry-run modes — key/config generation is safe and non-destructive.
 # --- Prerequisite: SSH host key ---
 HOST_KEY="${CLONE_DIR}/modules/hosts/${HOST}/etc/ssh/ssh_host_ed25519_key"
 
@@ -103,31 +132,44 @@ if [[ ! -d "$SB_KEYS" ]]; then
 fi
 
 # --- Disk confirmation ---
-echo ""
-info "Disk layout — the following will be ERASED"
-echo ""
-lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
-echo ""
-read -rp "Type 'yes' to confirm disk wipe and continue: " CONFIRM
-if [[ "$CONFIRM" != "yes" ]]; then
-  err "Aborted."
-  exit 1
+if $DRY_RUN; then
+  info "[DRY RUN] Would show disk layout and prompt for confirmation"
+else
+  echo ""
+  info "Disk layout — the following will be ERASED"
+  echo ""
+  lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
+  echo ""
+  read -rp "Type 'yes' to confirm disk wipe and continue: " CONFIRM
+  if [[ "$CONFIRM" != "yes" ]]; then
+    err "Aborted."
+    exit 1
+  fi
 fi
 
 # --- Install ---
-info "Partitioning disk with disko..."
-disko --mode disko --flake "${CLONE_DIR}#${HOST}"
+if $DRY_RUN; then
+  info "[DRY RUN] Would run: disko --mode disko --flake ${CLONE_DIR}#${HOST}"
+  info "[DRY RUN] Would run: nixos-install --flake ${CLONE_DIR}#${HOST} --no-root-passwd"
+else
+  info "Partitioning disk with disko..."
+  disko --mode disko --flake "${CLONE_DIR}#${HOST}"
 
-info "Installing NixOS (this will take a while)..."
-nixos-install --flake "${CLONE_DIR}#${HOST}" --no-root-passwd
+  info "Installing NixOS (this will take a while)..."
+  nixos-install --flake "${CLONE_DIR}#${HOST}" --no-root-passwd
+fi
 
 # --- Done ---
 echo ""
-success "Installation complete!"
-echo ""
-echo -e "${BOLD}First boot — Secure Boot enrollment:${RESET}"
-echo "  1. Reboot into UEFI firmware (F2 on Dell)"
-echo "  2. Secure Boot: keep ENABLED, clear all keys → enters Setup Mode"
-echo "  3. Save and boot into NixOS, then run:"
-echo "       sudo sbctl enroll-keys --microsoft"
+if $DRY_RUN; then
+  success "[DRY RUN] Dry run complete — no disk changes were made"
+else
+  success "Installation complete!"
+  echo ""
+  echo -e "${BOLD}First boot — Secure Boot enrollment:${RESET}"
+  echo "  1. Reboot into UEFI firmware (F2 on Dell)"
+  echo "  2. Secure Boot: keep ENABLED, clear all keys → enters Setup Mode"
+  echo "  3. Save and boot into NixOS, then run:"
+  echo "       sudo sbctl enroll-keys --microsoft"
+fi
 echo ""
