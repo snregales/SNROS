@@ -9,7 +9,6 @@
       runtimeInputs = with pkgs; [
         git
         openssh
-        ssh-to-age
         sbctl
         inputs.disko.packages.${system}.disko
       ];

@@ -85,31 +85,7 @@ if [[ -z "${SNROS_CLONE_DIR:-}" ]]; then
   fi
 fi
 
-# Prerequisites run in both normal and dry-run modes — key/config generation is safe and non-destructive.
-# --- Prerequisite: SSH host key ---
-HOST_KEY="${CLONE_DIR}/modules/hosts/${HOST}/etc/ssh/ssh_host_ed25519_key"
-
-if [[ ! -f "$HOST_KEY" ]]; then
-  info "SSH host key not found — generating..."
-  mkdir -p "$(dirname "$HOST_KEY")"
-  ssh-keygen -t ed25519 -f "$HOST_KEY" -N "" -C "$HOST"
-  chmod 600 "$HOST_KEY"
-  AGE_KEY=$(ssh-to-age < "${HOST_KEY}.pub")
-  echo ""
-  echo -e "${BOLD}Action required before continuing:${RESET}"
-  echo ""
-  echo "  Age public key for ${HOST}:"
-  echo -e "  ${BOLD}${AGE_KEY}${RESET}"
-  echo ""
-  echo "  On your dev machine:"
-  echo "    1. Add the age key above to .sops.yaml"
-  echo "    2. Run:  just re-encrypt-secrets"
-  echo "    3. Run:  git add modules/hosts/${HOST}/etc/ssh/ && git commit -m 'chore: add ${HOST} host key' && git push"
-  echo "    4. Re-run this installer"
-  echo ""
-  exit 0
-fi
-
+# Prerequisites run in both normal and dry-run modes — config generation is safe and non-destructive.
 # --- Prerequisite: hardware config ---
 HW_CONFIG="${CLONE_DIR}/devices/${HOST}/hardware-configuration.nix"
 

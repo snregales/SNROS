@@ -39,16 +39,9 @@ curl -sSf https://raw.githubusercontent.com/snregales/snros/main/install.sh | sh
 
 The installer will:
 
-1. Check for a pre-generated SSH host key — if missing, generate one and print
-   the age public key, then pause with instructions to update `.sops.yaml` on
-   your dev machine before continuing
-2. Generate hardware config automatically if not already in the repo
-3. Generate secureboot keys if not already in the repo
-4. Confirm the disk to wipe, then run disko and `nixos-install`
-
-> **Note:** The SSH host key step requires a round-trip to your dev machine the
-> first time (`just re-encrypt-secrets` + push). All other prerequisites are
-> handled automatically.
+1. Generate hardware config automatically if not already in the repo
+2. Generate secureboot keys if not already in the repo
+3. Confirm the disk to wipe, then run disko and `nixos-install`
 
 ### Remote install (nixos-anywhere)
 
