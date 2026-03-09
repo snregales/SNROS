@@ -1,43 +1,59 @@
 # SNROS
 
-> Sharlon's NixOS flake config for Dell XPS laptops — ephemeral root, sops-nix, and flake-parts.
+> Sharlon's NixOS flake config for Dell XPS laptops — ephemeral root, sops-nix,
+> and flake-parts.
 
 [![NixOS Unstable](https://img.shields.io/badge/NixOS-unstable-5277C3?logo=nixos&logoColor=white)](https://nixos.org)
 
 ## Hosts
 
-| Host | Hardware | GPU |
-|------|----------|-----|
+| Host            | Hardware         | GPU                                                |
+| --------------- | ---------------- | -------------------------------------------------- |
 | `dell-xps-9500` | Dell XPS 15 9500 | Intel UHD 630 + NVIDIA GTX 1650 Ti (PRIME offload) |
-| `dell-xps-9640` | Dell XPS 16 9640 | Intel Arc Xe-LPG + NVIDIA (PRIME offload) |
+| `dell-xps-9640` | Dell XPS 16 9640 | Intel Arc Xe-LPG + NVIDIA (PRIME offload)          |
 
 ## Installation
 
 ### Prerequisites
 
-- [Nix](https://nixos.org/download) with flakes enabled
-- [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) authenticated
-- SOPS age key accessible — in the dev shell, `$SOPS_AGE_KEY_CMD` reads it from 1Password automatically
+- [Nix](https://nixos.org/download) with flakes enabled — add to
+  `/etc/nix/nix.conf` or `~/.config/nix/nix.conf`:
+
+  ```nix
+  experimental-features = nix-command flakes pipe-operators
+  ```
+
+- [1Password CLI](https://developer.1password.com/docs/cli/) (`op`)
+  authenticated
+- SOPS age key accessible — in the dev shell, `$SOPS_AGE_KEY_CMD` reads it from
+  1Password automatically
 
 ### Curl install (live ISO)
 
-The fastest path from bare metal to a running system. Boot the target from a [NixOS live ISO](https://nixos.org/download), then run:
+The fastest path from bare metal to a running system. Boot the target from a
+[NixOS live ISO](https://nixos.org/download), then run:
 
 ```sh
 curl -sSf https://raw.githubusercontent.com/snregales/snros/main/install.sh | sh -s -- <host>
 ```
 
 The installer will:
-1. Check for a pre-generated SSH host key — if missing, generate one and print the age public key, then pause with instructions to update `.sops.yaml` on your dev machine before continuing
+
+1. Check for a pre-generated SSH host key — if missing, generate one and print
+   the age public key, then pause with instructions to update `.sops.yaml` on
+   your dev machine before continuing
 2. Generate hardware config automatically if not already in the repo
 3. Generate secureboot keys if not already in the repo
 4. Confirm the disk to wipe, then run disko and `nixos-install`
 
-> **Note:** The SSH host key step requires a round-trip to your dev machine the first time (`just re-encrypt-secrets` + push). All other prerequisites are handled automatically.
+> **Note:** The SSH host key step requires a round-trip to your dev machine the
+> first time (`just re-encrypt-secrets` + push). All other prerequisites are
+> handled automatically.
 
 ### Remote install (nixos-anywhere)
 
-The primary path for deploying to a bare-metal machine. Requires the target to be booted into a NixOS live ISO.
+The primary path for deploying to a bare-metal machine. Requires the target to
+be booted into a NixOS live ISO.
 
 **On the target (live ISO):**
 
@@ -89,20 +105,29 @@ nix develop                              # enter dev shell
 sudo nixos-rebuild switch --flake .#<host>
 ```
 
-> The SOPS age key must be present at `/var/lib/sops-nix/key.txt` or derivable from the SSH host key at `/etc/ssh/ssh_host_ed25519_key`. On first activation, `sops-nix` generates the age key automatically from the host SSH key.
+> The SOPS age key must be present at `/var/lib/sops-nix/key.txt` or derivable
+> from the SSH host key at `/etc/ssh/ssh_host_ed25519_key`. On first activation,
+> `sops-nix` generates the age key automatically from the host SSH key.
 
 ### VM (local testing)
 
-Builds and launches a QEMU VM for any host. Useful for testing configuration changes without touching hardware.
+Builds and launches a QEMU VM for any host. Useful for testing configuration
+changes without touching hardware.
 
 ```sh
 nix develop                              # dev shell required
 just run-vm <host>                       # builds VM image, then launches it
 ```
 
-The VM variant disables disko, impermanence, and biometrics. `just run-vm` automatically injects the SOPS age key (read from 1Password via `$SOPS_AGE_KEY_CMD`) into the VM via a shared directory — do not launch the VM binary directly. Requires `nixGLIntel` (included in the dev shell) for GPU-accelerated rendering.
+The VM variant disables disko, impermanence, and biometrics. `just run-vm`
+automatically injects the SOPS age key (read from 1Password via
+`$SOPS_AGE_KEY_CMD`) into the VM via a shared directory — do not launch the VM
+binary directly. Requires `nixGLIntel` (included in the dev shell) for
+GPU-accelerated rendering.
 
-The installer script also supports a `--dry-run` flag that skips disk partitioning and NixOS installation while running all other steps (key generation, hardware detection):
+The installer script also supports a `--dry-run` flag that skips disk
+partitioning and NixOS installation while running all other steps (key
+generation, hardware detection):
 
 ```sh
 nix run github:snregales/snros#install -- --dry-run <host>
@@ -127,7 +152,12 @@ nix run github:snregales/snros#install -- --dry-run <host>
 
 ### Dendritic pattern
 
-`flake.nix` uses [`import-tree`](https://github.com/vic/import-tree) to automatically load every `.nix` file under `modules/` and `tests/`. There is no central imports list — placing a file in `modules/` is sufficient to activate it. `devices/` and `lib/` live outside this tree intentionally: hardware configs are generated and never manually edited; library functions are imported by relative path.
+`flake.nix` uses [`import-tree`](https://github.com/vic/import-tree) to
+automatically load every `.nix` file under `modules/` and `tests/`. There is no
+central imports list — placing a file in `modules/` is sufficient to activate
+it. `devices/` and `lib/` live outside this tree intentionally: hardware configs
+are generated and never manually edited; library functions are imported by
+relative path.
 
 ### Module conventions
 
@@ -141,9 +171,13 @@ _: {
 }
 ```
 
-Hosts compose modules explicitly by importing from `flake.modules.nixos.*`. Nothing is implicit — every module in a host's configuration is a deliberate choice.
+Hosts compose modules explicitly by importing from `flake.modules.nixos.*`.
+Nothing is implicit — every module in a host's configuration is a deliberate
+choice.
 
-The `configurations.nixos.<hostname>` option (defined in `modules/hosts/nixos.nix`) converts host definitions into `flake.nixosConfigurations` entries automatically.
+The `configurations.nixos.<hostname>` option (defined in
+`modules/hosts/nixos.nix`) converts host definitions into
+`flake.nixosConfigurations` entries automatically.
 
 ## Development
 
@@ -153,7 +187,10 @@ The `configurations.nixos.<hostname>` option (defined in `modules/hosts/nixos.ni
 nix develop
 ```
 
-The dev shell provides: `alejandra`, `nil`, `just`, `sops`, `age`, `ssh-to-age`, `sbctl`, `fzf`, `yazi`, `zellij`, `comma`, `nixGLIntel`, and a pre-configured Neovim with LSP and the Ayu Dark theme. Pre-commit hooks are installed automatically on shell entry.
+The dev shell provides: `alejandra`, `nil`, `just`, `sops`, `age`, `ssh-to-age`,
+`sbctl`, `fzf`, `yazi`, `zellij`, `comma`, `nixGLIntel`, and a pre-configured
+Neovim with LSP and the Ayu Dark theme. Pre-commit hooks are installed
+automatically on shell entry.
 
 Alternatively, launch the full Zellij layout (editor + shell panes):
 
@@ -176,58 +213,74 @@ just re-encrypt-secrets  # re-encrypt after key changes
 
 Hooks run automatically on `git commit`:
 
-| Hook | Purpose |
-|------|---------|
+| Hook        | Purpose                                   |
+| ----------- | ----------------------------------------- |
 | `alejandra` | Nix formatter — enforces consistent style |
-| `nil` | Nix LSP — catches type errors |
-| `statix` | Nix linter — flags anti-patterns |
-| `deadnix` | Removes unused bindings |
+| `nil`       | Nix LSP — catches type errors             |
+| `statix`    | Nix linter — flags anti-patterns          |
+| `deadnix`   | Removes unused bindings                   |
 
 ## Philosophy
 
 ### Erasing Your Darlings
 
-The root filesystem (`/`) is a ZFS dataset that is rolled back to a blank snapshot on every boot. Nothing survives reboot unless it is explicitly declared in the impermanence configuration under `/persist`.
+The root filesystem (`/`) is a ZFS dataset that is rolled back to a blank
+snapshot on every boot. Nothing survives reboot unless it is explicitly declared
+in the impermanence configuration under `/persist`.
 
-This forces intentionality about state: if something matters, it must be named. Configuration drift, forgotten dotfiles, and accumulated cruft are structurally impossible. The cost is having to think once about what to keep. The benefit is a system that behaves the same on day one and day one thousand.
+This forces intentionality about state: if something matters, it must be named.
+Configuration drift, forgotten dotfiles, and accumulated cruft are structurally
+impossible. The cost is having to think once about what to keep. The benefit is
+a system that behaves the same on day one and day one thousand.
 
-Persisted paths are declared in `modules/core/impermanence.nix`. Per-user persistence is managed by Home Manager.
+Persisted paths are declared in `modules/core/impermanence.nix`. Per-user
+persistence is managed by Home Manager.
 
 ### ZFS
 
-Disk layout is managed by [`disko`](https://github.com/nix-community/disko): a GPT disk with a 512M FAT32 EFI partition and a ZFS pool (`rpool`) filling the remainder. The pool uses `zstd` compression, `ashift=12`, and `autotrim`.
+Disk layout is managed by [`disko`](https://github.com/nix-community/disko): a
+GPT disk with a 512M FAT32 EFI partition and a ZFS pool (`rpool`) filling the
+remainder. The pool uses `zstd` compression, `ashift=12`, and `autotrim`.
 
 Datasets are separated by durability:
 
-| Dataset | Mount | Survives reboot |
-|---------|-------|-----------------|
-| `rpool/local/root` | `/` | No — rolled back to `@blank` |
-| `rpool/local/nix` | `/nix` | Yes |
-| `rpool/safe/home` | `/home` | Yes |
-| `rpool/safe/persist` | `/persist` | Yes |
+| Dataset              | Mount      | Survives reboot              |
+| -------------------- | ---------- | ---------------------------- |
+| `rpool/local/root`   | `/`        | No — rolled back to `@blank` |
+| `rpool/local/nix`    | `/nix`     | Yes                          |
+| `rpool/safe/home`    | `/home`    | Yes                          |
+| `rpool/safe/persist` | `/persist` | Yes                          |
 
 ### Secrets
 
 Two-tier secrets model:
 
-| Type | Tool | Examples |
-|------|------|---------|
-| System secrets | SOPS + age | User password hash, Syncthing GUI password |
-| User secrets | 1Password (`op read`) | Git signing key, WiFi PSK, Gmail credentials |
+| Type           | Tool                  | Examples                                     |
+| -------------- | --------------------- | -------------------------------------------- |
+| System secrets | SOPS + age            | User password hash, Syncthing GUI password   |
+| User secrets   | 1Password (`op read`) | Git signing key, WiFi PSK, Gmail credentials |
 
-System secrets are encrypted with age keys derived from SSH host keys. Rotating or adding a host requires running `just gen-host-key <host>` and re-encrypting with `just re-encrypt-secrets`. No plaintext secrets exist in the repository.
+System secrets are encrypted with age keys derived from SSH host keys. Rotating
+or adding a host requires running `just gen-host-key <host>` and re-encrypting
+with `just re-encrypt-secrets`. No plaintext secrets exist in the repository.
 
 ### Modularity
 
-Configuration is composed, not inherited. The `dell-xps` base module assembles a set of named modules from `flake.modules.nixos.*` — including secure boot via Lanzaboote, ZFS, and impermanence. Each host then imports that base and adds only what differs: hardware config, GPU bus IDs, and host-specific SSH keys.
+Configuration is composed, not inherited. The `dell-xps` base module assembles a
+set of named modules from `flake.modules.nixos.*` — including secure boot via
+Lanzaboote, ZFS, and impermanence. Each host then imports that base and adds
+only what differs: hardware config, GPU bus IDs, and host-specific SSH keys.
 
 ## Contributing
 
 ### Adding a new host
 
-1. Boot the target from a NixOS installer ISO and set up SSH access (see [Remote install](#remote-install-nixos-anywhere))
-2. `just gen-hardware-config <host> <ip>` — captures hardware config to `devices/<host>/hardware-configuration.nix`
-3. `just gen-host-key <host>` — generates SSH host key, prints the age public key. Add it to `.sops.yaml`, then run `just re-encrypt-secrets`
+1. Boot the target from a NixOS installer ISO and set up SSH access (see
+   [Remote install](#remote-install-nixos-anywhere))
+2. `just gen-hardware-config <host> <ip>` — captures hardware config to
+   `devices/<host>/hardware-configuration.nix`
+3. `just gen-host-key <host>` — generates SSH host key, prints the age public
+   key. Add it to `.sops.yaml`, then run `just re-encrypt-secrets`
 4. `just gen-secureboot-keys <host>` — generates lanzaboote secure boot keys
 5. Create `modules/hosts/<host>/configuration.nix`:
 
@@ -264,7 +317,10 @@ in {
 
 ### Adjusting the development shell
 
-The dev shell is defined in `modules/devshell.nix`. To add a package, append it to the existing `packages` list inside `mkShell`. The list uses `++` to concatenate nixpkgs packages with flake-sourced ones — add new nixpkgs tools to the first segment:
+The dev shell is defined in `modules/devshell.nix`. To add a package, append it
+to the existing `packages` list inside `mkShell`. The list uses `++` to
+concatenate nixpkgs packages with flake-sourced ones — add new nixpkgs tools to
+the first segment:
 
 ```nix
 packages = with pkgs;
@@ -277,7 +333,9 @@ packages = with pkgs;
   ];
 ```
 
-To add a pre-commit hook, extend `pre-commit.settings.hooks` in the same file. Available hooks are listed in the [git-hooks.nix documentation](https://github.com/cachix/git-hooks.nix).
+To add a pre-commit hook, extend `pre-commit.settings.hooks` in the same file.
+Available hooks are listed in the
+[git-hooks.nix documentation](https://github.com/cachix/git-hooks.nix).
 
 ## License
 
