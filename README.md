@@ -256,3 +256,7 @@ packages = with pkgs;
 ```
 
 To add a pre-commit hook, extend `pre-commit.settings.hooks` in the same file. Available hooks are listed in the [git-hooks.nix documentation](https://github.com/cachix/git-hooks.nix).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
