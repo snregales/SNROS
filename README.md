@@ -34,7 +34,7 @@ The fastest path from bare metal to a running system. Boot the target from a
 [NixOS live ISO](https://nixos.org/download), then run:
 
 ```sh
-curl -sSf https://raw.githubusercontent.com/snregales/snros/main/install.sh | sh -s -- <host>
+curl -sSf https://raw.githubusercontent.com/snregales/snros/main/install.sh | sudo sh -s -- <host>
 ```
 
 The installer will:

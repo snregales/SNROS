@@ -6,6 +6,11 @@
 
 set -euo pipefail
 
+if [[ $EUID -ne 0 ]]; then
+  echo "error: this installer must be run as root (try: sudo $0 $*)" >&2
+  exit 1
+fi
+
 # Ensure NixOS live ISO system tools are available alongside nix-provided runtimeInputs
 export PATH="/run/current-system/sw/bin:${PATH}"
 
