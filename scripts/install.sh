@@ -76,7 +76,7 @@ fi
 # --- Validate host ---
 # Host validation is skipped when SNROS_CLONE_DIR is set (test mode: no network available)
 if [[ -z "${SNROS_CLONE_DIR:-}" ]]; then
-  if ! nix eval "${CLONE_DIR}#nixosConfigurations.${HOST}" --apply 'x: true' --raw &>/dev/null; then
+  if ! nix eval "${CLONE_DIR}#nixosConfigurations.${HOST}" --apply 'x: "ok"' --raw &>/dev/null; then
     err "Host '${HOST}' not found in nixosConfigurations. Available hosts:"
     nix eval "${CLONE_DIR}#nixosConfigurations" \
       --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)' \

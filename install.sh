@@ -8,4 +8,4 @@ if ! command -v nix &>/dev/null; then
   exit 1
 fi
 
-exec nix run github:snregales/snros#install -- "$@"
+exec nix run --refresh github:snregales/snros#install -- "$@"
