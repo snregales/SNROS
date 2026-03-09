@@ -52,7 +52,7 @@ if [[ -z "$HOST" ]]; then
     --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)' \
     --raw 2>/dev/null) && while IFS= read -r line; do echo "  $line"; done <<<"$hosts" || echo "  (could not enumerate hosts)"
   echo ""
-  read -rp "Enter host name: " HOST
+  read -rp "Enter host name: " HOST < /dev/tty
 fi
 
 if [[ -z "$HOST" ]]; then
@@ -121,7 +121,7 @@ else
   echo ""
   lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
   echo ""
-  read -rp "Type 'yes' to confirm disk wipe and continue: " CONFIRM
+  read -rp "Type 'yes' to confirm disk wipe and continue: " CONFIRM < /dev/tty
   if [[ "$CONFIRM" != "yes" ]]; then
     err "Aborted."
     exit 1
