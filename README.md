@@ -21,6 +21,8 @@
 
   ```nix
   experimental-features = nix-command flakes pipe-operators
+  extra-substituters = https://nix-community.cachix.org https://niri.cachix.org
+  extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCUSFRk= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=
   ```
 
 - [1Password CLI](https://developer.1password.com/docs/cli/) (`op`)
