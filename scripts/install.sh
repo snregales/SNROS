@@ -78,6 +78,19 @@ else
   git clone --depth 1 https://github.com/snregales/snros "$CLONE_DIR"
 fi
 
+# --- Activate devshell for 1Password/SOPS environment ---
+if [[ -z "${SNROS_IN_DEVSHELL:-}" ]]; then
+  info "Activating devshell in ${CLONE_DIR} for 1Password/SOPS integration..."
+  cd "$CLONE_DIR"
+  _install_args=("$HOST")
+  $DRY_RUN && _install_args+=("--dry-run")
+  exec nix develop \
+    --command env \
+    "SNROS_IN_DEVSHELL=1" \
+    "SNROS_CLONE_DIR=${CLONE_DIR}" \
+    bash "$(readlink -f "$0")" "${_install_args[@]}"
+fi
+
 # --- Validate host ---
 # Host validation is skipped when SNROS_CLONE_DIR is set (test mode: no network available)
 if [[ -z "${SNROS_CLONE_DIR:-}" ]]; then

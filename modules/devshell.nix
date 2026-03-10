@@ -37,6 +37,11 @@
       modules = [nvfSettings ayuTheme];
     };
   in {
+    _module.args.pkgs = import inputs.nixpkgs {
+      inherit system;
+      config.allowUnfree = true;
+    };
+
     pre-commit.settings.hooks = {
       alejandra.enable = true;
       nil.enable = true;
@@ -59,6 +64,7 @@
       shellHook = ''
         alias ,='comma'
         export SOPS_AGE_KEY_CMD="op read op://snros/sops-age-key/notesPlain"
+        export OP_SOCKET_PATH="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/com.1password/socket"
         ${config.pre-commit.installationScript}
       '';
       packages = with pkgs;
@@ -74,6 +80,7 @@
           age
           ssh-to-age
           sbctl
+          _1password-cli
         ]
         ++ [
           inputs.nix-index-database.packages.${system}.comma-with-db
