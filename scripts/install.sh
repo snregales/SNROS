@@ -149,6 +149,70 @@ else
   info "Partitioning disk with disko..."
   disko --mode disko --flake "${CLONE_DIR}#${HOST}"
 
+  # --- Stage SSH host key ---
+  # Written to /persist (impermanence bind-mounts it on every boot) and also to the
+  # root dataset directly (for activation scripts that run before impermanence).
+  info "Generating SSH host key..."
+  mkdir -p /mnt/persist/etc/ssh
+  ssh-keygen -q -t ed25519 -f /mnt/persist/etc/ssh/ssh_host_ed25519_key -N "" -C "$HOST"
+  chmod 600 /mnt/persist/etc/ssh/ssh_host_ed25519_key
+  chmod 644 /mnt/persist/etc/ssh/ssh_host_ed25519_key.pub
+
+  # --- Stage SOPS age key ---
+  # sops-nix reads /var/lib/sops-nix/key.txt; /var/lib/sops-nix is an impermanence directory
+  # so writing to /persist/var/lib/sops-nix makes it available after the bind-mount.
+  # The admin age key is already a recipient in .sops.yaml so it can decrypt secrets.yaml.
+  info "Staging SOPS age key..."
+  _age_key=""
+
+  if [[ -n "${SOPS_AGE_KEY:-}" ]]; then
+    # Caller pre-fetched the key and exported it before sudo
+    _age_key="$SOPS_AGE_KEY"
+  elif [[ -n "${SUDO_USER:-}" ]] && [[ -n "${SOPS_AGE_KEY_CMD:-}" ]]; then
+    # Running under sudo: invoke op as the original user so it reaches their GUI socket.
+    # Redirect stdin to /dev/null so op cannot prompt interactively.
+    _uid=$(id -u "$SUDO_USER")
+    _socket="/run/user/${_uid}/com.1password/socket"
+    # Prefer the system wrapper (/run/wrappers/bin/op) which has --socket-path baked in;
+    # fall back to whichever op is on PATH.
+    _op_bin="${_op_bin:-}"
+    for _candidate in /run/wrappers/bin/op "$(command -v op 2>/dev/null)"; do
+      [[ -x "${_candidate:-}" ]] && { _op_bin="$_candidate"; break; }
+    done
+    if [[ -n "$_op_bin" ]]; then
+      _age_key=$(sudo -u "$SUDO_USER" \
+        env "OP_SOCKET_PATH=${_socket}" "$_op_bin" \
+        read op://snros/sops-age-key/notesPlain </dev/null 2>/dev/null) || true
+    fi
+  fi
+
+  if [[ -z "${_age_key:-}" ]]; then
+    warn "Could not retrieve SOPS age key automatically."
+    echo ""
+    echo "In a separate terminal, run as your normal user:"
+    echo "  op read op://snros/sops-age-key/notesPlain"
+    echo ""
+    read -rsp "Paste the age key here (input hidden): " _age_key < /dev/tty
+    echo ""
+  fi
+
+  if [[ -z "${_age_key:-}" ]]; then
+    err "No SOPS age key provided — cannot continue."
+    exit 1
+  fi
+
+  # sops.age.keyFile = "/persist/var/lib/sops-nix/key.txt" — direct persist path,
+  # no impermanence bind-mount involved so no activation-ordering dependency.
+  mkdir -p /mnt/persist/var/lib/sops-nix
+  printf '%s\n' "$_age_key" > /mnt/persist/var/lib/sops-nix/key.txt
+  chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
+  unset _age_key _uid _socket _op_bin
+
+  # --- Stage secureboot keys ---
+  # lanzaboote.pkiBundle = "/persist/secureboot"; keys were generated into the clone dir.
+  info "Staging secureboot keys..."
+  cp -r "${CLONE_DIR}/modules/hosts/${HOST}/persist/secureboot" /mnt/persist/
+
   info "Installing NixOS (this will take a while)..."
   nixos-install --flake "${CLONE_DIR}#${HOST}" --no-root-passwd
 fi
